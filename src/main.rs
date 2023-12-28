@@ -1,3 +1,5 @@
+use std::io::Read;
+
 use clap::Parser;
 use monistode_emulator::common::{Processor, ProcessorContinue};
 use monistode_emulator::executable::Executable;
@@ -16,9 +18,16 @@ fn main() {
     stack_processor.load_executable(&executable);
 
     loop {
-        match stack_processor.run_command(|_, value| {
-            print!("{}", value as u8 as char);
-        }) {
+        match stack_processor.run_command(
+            |_, value| {
+                print!("{}", value as u8 as char);
+            },
+            |_| {
+                let mut buffer = [0u8; 1];
+                std::io::stdin().read_exact(&mut buffer).unwrap();
+                buffer[0] as u16
+            },
+        ) {
             ProcessorContinue::KeepRunning => {}
             ProcessorContinue::Halt => break,
         }
