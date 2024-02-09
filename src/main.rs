@@ -23,17 +23,27 @@ struct Opts {
 
 fn main() {
     let opts = Opts::parse();
-    let bytes = std::fs::read(opts.executable).unwrap();
+    let bytes = std::fs::read(opts.executable).unwrap_or_else(|e| {
+        eprintln!("Failed to read file: {}", e);
+        std::process::exit(1);
+    });
     let executable = Executable::new(&bytes.into_boxed_slice());
-    match opts.processor {
+    let result = match opts.processor {
         ProcessorType::Stack => run_stack_processor(executable),
         ProcessorType::Cisc => run_cisc_processor(executable),
+    };
+    match result {
+        Ok(()) => {}
+        Err(e) => {
+            eprintln!("Error: {}", e);
+            std::process::exit(1);
+        }
     }
 }
 
-fn run_cisc_processor(executable: Executable) {
+fn run_cisc_processor(executable: Executable) -> Result<(), String> {
     let mut cisc_processor = CiscProcessor::new();
-    cisc_processor.load_executable(&executable);
+    cisc_processor.load_executable(&executable)?;
 
     loop {
         match cisc_processor.run_command(
@@ -47,14 +57,17 @@ fn run_cisc_processor(executable: Executable) {
             },
         ) {
             ProcessorContinue::KeepRunning => {}
-            ProcessorContinue::Halt => break,
+            ProcessorContinue::Error => {
+                return Err("Failed to run command".to_string());
+            }
+            ProcessorContinue::Halt => return Ok(()),
         }
     }
 }
 
-fn run_stack_processor(executable: Executable) {
+fn run_stack_processor(executable: Executable) -> Result<(), String> {
     let mut stack_processor = StackProcessor::new();
-    stack_processor.load_executable(&executable);
+    stack_processor.load_executable(&executable)?;
 
     loop {
         match stack_processor.run_command(
@@ -68,7 +81,10 @@ fn run_stack_processor(executable: Executable) {
             },
         ) {
             ProcessorContinue::KeepRunning => {}
-            ProcessorContinue::Halt => break,
+            ProcessorContinue::Error => {
+                return Err("Failed to run command".to_string());
+            }
+            ProcessorContinue::Halt => return Ok(()),
         }
     }
 }
