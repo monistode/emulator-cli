@@ -110,9 +110,9 @@ checksum = "95505c38b4572b2d910cecb0281560f54b440a19336cbbcb27bf6ce6adc6f5a8"
 
 [[package]]
 name = "monistode-emulator"
-version = "0.1.8"
+version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fb29f34abf1e84ac3dec9b31b5130c7d8c334d98a18d10444f9f49a236acdeab"
+checksum = "f46749d5e8229f64794e742293a7759c582fed06a1a781d053747f7c6fb78d8e"
 dependencies = [
  "num-derive",
  "num-traits",
@@ -121,7 +121,7 @@ dependencies = [
 
 [[package]]
 name = "monistode-emulator-cli"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "clap",
  "monistode-emulator",
