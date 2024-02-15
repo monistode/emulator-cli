@@ -1,15 +1,19 @@
 use std::io::Read;
 
 use clap::{Parser, ValueEnum};
+use monistode_emulator::acc_processor::AccProcessor;
 use monistode_emulator::cisc_processor::CiscProcessor;
 use monistode_emulator::common::{Processor, ProcessorContinue};
 use monistode_emulator::executable::Executable;
+use monistode_emulator::risc_processor::RiscProcessor;
 use monistode_emulator::stack_processor::StackProcessor;
 
 #[derive(ValueEnum, Clone, Copy)]
 #[clap(rename_all = "kebab-case")]
 enum ProcessorType {
     Stack,
+    Accumulator,
+    Risc,
     Cisc,
 }
 
@@ -30,6 +34,8 @@ fn main() {
     let executable = Executable::new(&bytes.into_boxed_slice());
     let result = match opts.processor {
         ProcessorType::Stack => run_stack_processor(executable),
+        ProcessorType::Accumulator => run_accumulator_processor(executable),
+        ProcessorType::Risc => run_risc_processor(executable),
         ProcessorType::Cisc => run_cisc_processor(executable),
     };
     match result {
@@ -47,6 +53,54 @@ fn run_cisc_processor(executable: Executable) -> Result<(), String> {
 
     loop {
         match cisc_processor.run_command(
+            |_, value| {
+                print!("{}", value as u8 as char);
+            },
+            |_| {
+                let mut buffer = [0u8; 1];
+                std::io::stdin().read_exact(&mut buffer).unwrap();
+                buffer[0] as u16
+            },
+        ) {
+            ProcessorContinue::KeepRunning => {}
+            ProcessorContinue::Error => {
+                return Err("Failed to run command".to_string());
+            }
+            ProcessorContinue::Halt => return Ok(()),
+        }
+    }
+}
+
+fn run_risc_processor(executable: Executable) -> Result<(), String> {
+    let mut risc_processor = RiscProcessor::new();
+    risc_processor.load_executable(&executable)?;
+
+    loop {
+        match risc_processor.run_command(
+            |_, value| {
+                print!("{}", value as u8 as char);
+            },
+            |_| {
+                let mut buffer = [0u8; 1];
+                std::io::stdin().read_exact(&mut buffer).unwrap();
+                buffer[0] as u16
+            },
+        ) {
+            ProcessorContinue::KeepRunning => {}
+            ProcessorContinue::Error => {
+                return Err("Failed to run command".to_string());
+            }
+            ProcessorContinue::Halt => return Ok(()),
+        }
+    }
+}
+
+fn run_accumulator_processor(executable: Executable) -> Result<(), String> {
+    let mut accumulator_processor = AccProcessor::new();
+    accumulator_processor.load_executable(&executable)?;
+
+    loop {
+        match accumulator_processor.run_command(
             |_, value| {
                 print!("{}", value as u8 as char);
             },
