@@ -1,10 +1,10 @@
 use std::io::Read;
 
 use clap::{Parser, ValueEnum};
+use monistode_binutils::{Executable, Serializable};
 use monistode_emulator::acc_processor::AccProcessor;
 use monistode_emulator::cisc_processor::CiscProcessor;
 use monistode_emulator::common::{Processor, ProcessorContinue};
-use monistode_emulator::executable::Executable;
 use monistode_emulator::risc_processor::RiscProcessor;
 use monistode_emulator::stack_processor::StackProcessor;
 
@@ -31,7 +31,13 @@ fn main() {
         eprintln!("Failed to read file: {}", e);
         std::process::exit(1);
     });
-    let executable = Executable::new(&bytes.into_boxed_slice());
+    let executable = match Executable::deserialize(&bytes.into_boxed_slice()) {
+        Ok(executable) => executable.1,
+        Err(_) => {
+            eprintln!("Failed to deserialize executable:");
+            std::process::exit(1);
+        }
+    };
     let result = match opts.processor {
         ProcessorType::Stack => run_stack_processor(executable),
         ProcessorType::Accumulator => run_accumulator_processor(executable),
