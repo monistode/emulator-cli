@@ -1,6 +1,6 @@
 [package]
 name = "monistode-emulator-cli"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 description = "A CLI for the Monistode emulator"
 license = "MIT"
@@ -9,5 +9,5 @@ license = "MIT"
 
 [dependencies]
 clap = { version = "4.4.11", features = ["derive"] }
-monistode-binutils = "0.1.0"
-monistode-emulator = "0.2.0"
+monistode-binutils = "0.1.1"
+monistode-emulator = "0.2.1"
